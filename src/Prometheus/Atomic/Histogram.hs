@@ -19,8 +19,7 @@ import           Data.Function            (fix)
 import           Data.IORef               (IORef, atomicModifyIORef', newIORef,
                                            readIORef)
 import           Data.Maybe               (fromMaybe)
-import           Data.Primitive.ByteArray
-import           Data.Primitive.Types
+import           Data.Primitive.PrimArray
 import qualified Data.Text                as Text
 import qualified Data.Vector.Primitive    as Vector
 import           GHC.Exts                 (Int (..), atomicReadIntArray#,
@@ -34,7 +33,7 @@ import           Prometheus               (Info (..), Metric (..),
 
 data Histogram = Histogram
   { hsBuckets :: Vector.Vector Double
-  , hsCounts  :: MutableByteArray (PrimState IO)
+  , hsCounts  :: MutablePrimArray (PrimState IO) Int
   , hsTotal   :: IORef Double
   }
 
@@ -46,13 +45,12 @@ data HistogramSample = HistogramSample
 
 createHistogram :: [Double] -> IO Histogram
 createHistogram buckets = do
-  vals <- newByteArray size
-  fillByteArray vals 0 size 0
+  vals <- newPrimArray len
+  setPrimArray vals 0 len 0
   ref <- newIORef 0
   pure $ Histogram (Vector.fromList buckets) vals ref
   where
     len = length buckets + 1
-    size = I# (sizeOf# (0 :: Int)) * len
 
 observeHistogram :: Histogram -> Double -> IO ()
 observeHistogram Histogram{..} val = do
@@ -61,11 +59,11 @@ observeHistogram Histogram{..} val = do
     in (# s1, () #)
   atomicModifyIORef' hsTotal $ \old -> (old + val, ())
   where
-    !(MutableByteArray arr) = hsCounts
+    !(MutablePrimArray arr) = hsCounts
     !(I# loc) = fromMaybe (Vector.length hsBuckets)  $ Vector.findIndex (> val) hsBuckets
 
-readIntArray :: Int -> MutableByteArray (PrimState IO) -> IO Int
-readIntArray !(I# i) !(MutableByteArray arr) =
+readIntArray :: Int -> MutablePrimArray (PrimState IO) Int -> IO Int
+readIntArray !(I# i) !(MutablePrimArray arr) =
   primitive $ \s0 ->
     case atomicReadIntArray# arr i s0 of
       (# s1, v #) -> (# s1, I# v #)
