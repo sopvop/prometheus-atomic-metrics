@@ -105,7 +105,7 @@ reportHistogram info@Info{..} hs@Histogram{..} = do
     bucketName = metricName <> "_bucket"
     mkBucket l = Sample bucketName [("le", l)] . bShow
     makeSamples samp@HistogramSample{..} =
-      let labels = fmap formatFloat (Vector.toList hsBuckets) <> ["Inf"]
+      let labels = fmap formatFloat (Vector.toList hsBuckets) <> ["+Inf"]
           bucks = uncurry mkBucket  <$> zip labels sampHistogram
       in countSample samp : sumSample samp : bucks
 
