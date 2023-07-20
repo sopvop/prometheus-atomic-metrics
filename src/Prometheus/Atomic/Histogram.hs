@@ -74,7 +74,7 @@ sampleHistogram Histogram{..} = do
   tot <- readIORef hsTotal
   -- Note: race condition between total and vals
   let
-    cumulative = scanr1 (+) vals
+    cumulative = scanl1 (+) vals
     count = sum vals
   pure $ HistogramSample cumulative tot count
   where
