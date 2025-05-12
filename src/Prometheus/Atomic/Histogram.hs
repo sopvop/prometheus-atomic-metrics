@@ -72,7 +72,7 @@ sampleHistogram :: Histogram -> IO HistogramSample
 sampleHistogram Histogram{..} = do
   vals <- reverse <$> fix go 0 []
   tot <- readIORef hsTotal
-  -- Note: race condition between total and vals
+  -- Note: race between total and vals. _sum metric doesn't match count it is optional tho
   let
     cumulative = scanl1 (+) vals
     count = sum vals

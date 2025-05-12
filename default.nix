@@ -1,5 +1,5 @@
-{ mkDerivation, base, bytestring, lib, primitive, prometheus-client
-, text, vector
+{ mkDerivation, base, bytestring, criterion, lib, primitive
+, prometheus-client, text, vector
 }:
 mkDerivation {
   pname = "prometheus-atomic-metrics";
@@ -8,5 +8,7 @@ mkDerivation {
   libraryHaskellDepends = [
     base bytestring primitive prometheus-client text vector
   ];
+  benchmarkHaskellDepends = [ base criterion prometheus-client ];
+  doBenchmark = true;
   license = lib.licenses.asl20;
 }
